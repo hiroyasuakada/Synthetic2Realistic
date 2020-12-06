@@ -503,7 +503,7 @@ class _UNetGenerator(nn.Module):
 
         self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
 
-    def forward(self, input):
+    def forward(self, input, gp=False):
         conv1 = self.pool(self.conv1(input))
         conv2 = self.pool(self.conv2.forward(conv1))
         conv3 = self.pool(self.conv3.forward(conv2))
@@ -535,7 +535,10 @@ class _UNetGenerator(nn.Module):
         output1 = self.output1.forward(torch.cat([deconv2, self.upsample(output2)], 1))
         result.append(output1)
 
-        return result
+        if not gp:
+            return result
+        else:
+            return result, center_out
 
 
 class _MultiscaleDiscriminator(nn.Module):

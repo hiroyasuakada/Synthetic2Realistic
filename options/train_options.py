@@ -51,4 +51,10 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--pool_size', type=int, default=20,
                                  help='the size of image buffer that stores previously generated images')
 
+        ### training parameters for Gaussian Process
+        self.parser.add_argument('--gp', action='store_true', help='whether uses Gaussian Process')
+        self.parser.add_argument('--version', type=str, default='version1', help='Set the GP model (version1 or version2?)')
+        self.parser.add_argument('--kernel_type', type=str, default='Linear', help='Set the GP model (Linear or Squared_exponential or Rational_quadratic?)')
+        self.parser.add_argument('--lambda_gp', type=float, default=0.015, help='whether uses Gaussian Process')
+
         self.isTrain = True

@@ -21,33 +21,49 @@ class BaseOptions():
                                  help='gpu ids: e.g. 0, 1, 2 use -1 for CPU')
         self.parser.add_argument('--model', type=str, default='wsupervised',
                                  help='choose which model to use, [supervised] | [wsupervised]')
-        # data pattern define
-        self.parser.add_argument('--img_source_file', type=str, default='/data/dataset/Image2Depth_SUN_NYU/trainA_SYN10.txt',
-                                 help='training and testing dataset for source domain')
-        self.parser.add_argument('--img_target_file', type=str, default='/data/dataset/Image2Depth_SUN_NYU/trainA.txt',
-                                 help='training and testing dataser for target domain')
-        self.parser.add_argument('--lab_source_file', type=str, default='/data/dataset/Image2Depth_SUN_NYU/trainC_SYN10.txt',
-                                 help='training label for source domain')
-        self.parser.add_argument('--lab_target_file', type=str, default='/data/dataset/Image2Depth_SUN_NYU/trainC.txt',
-                                 help='training label for target domain')
-        self.parser.add_argument('--dataset_mode', type=str, default='paired',
-                                 help='chooses how datasets are loaded. [paired| unpaired]')
-        self.parser.add_argument('--loadSize', nargs='+', type=int, default=[256, 192],
-                                 help='load image into same size [256, 192]|[640, 192]')
-        self.parser.add_argument('--flip', action='store_true',
-                                 help='if specified, do flip the image for data augmentation')
-        self.parser.add_argument('--scale_rate', type=float, default=0,
-                                 help='scale images with same rate')
-        self.parser.add_argument('--rotation', action='store_true',
-                                 help='if specified, rotate the images for data augmentation')
-        self.parser.add_argument('--crop', action='store_true',
-                                 help='if specified, crop the images for data augmentation')
-        self.parser.add_argument('--batchSize', type=int, default=1,
-                                 help='input batch size')
-        self.parser.add_argument('--nThreads', type=int, default=2,
-                                 help='# threads for loading data')
-        self.parser.add_argument('--shuffle', action='store_true',
-                                 help='if true, takes images randomly')
+        # # data pattern define
+        # self.parser.add_argument('--img_source_file', type=str, default='/data/dataset/Image2Depth_SUN_NYU/trainA_SYN10.txt',
+        #                          help='training and testing dataset for source domain')
+        # self.parser.add_argument('--img_target_file', type=str, default='/data/dataset/Image2Depth_SUN_NYU/trainA.txt',
+        #                          help='training and testing dataser for target domain')
+        # self.parser.add_argument('--lab_source_file', type=str, default='/data/dataset/Image2Depth_SUN_NYU/trainC_SYN10.txt',
+        #                          help='training label for source domain')
+        # self.parser.add_argument('--lab_target_file', type=str, default='/data/dataset/Image2Depth_SUN_NYU/trainC.txt',
+        #                          help='training label for target domain')
+        # self.parser.add_argument('--dataset_mode', type=str, default='paired',
+        #                          help='chooses how datasets are loaded. [paired| unpaired]')
+        # self.parser.add_argument('--loadSize', nargs='+', type=int, default=[256, 192],
+        #                          help='load image into same size [256, 192]|[640, 192]')
+        # self.parser.add_argument('--flip', action='store_true',
+        #                          help='if specified, do flip the image for data augmentation')
+        # self.parser.add_argument('--scale_rate', type=float, default=0,
+        #                          help='scale images with same rate')
+        # self.parser.add_argument('--rotation', action='store_true',
+        #                          help='if specified, rotate the images for data augmentation')
+        # self.parser.add_argument('--crop', action='store_true',
+        #                          help='if specified, crop the images for data augmentation')
+        # self.parser.add_argument('--batchSize', type=int, default=1,
+        #                          help='input batch size')
+        # self.parser.add_argument('--nThreads', type=int, default=2,
+        #                          help='# threads for loading data')
+        # self.parser.add_argument('--shuffle', action='store_true',
+        #                          help='if true, takes images randomly')
+
+        ### dataset parameters ###
+        self.parser.add_argument('--img_source_dir', type=str, help='training and testing dataset for source domain')
+        self.parser.add_argument('--img_target_dir', type=str, help='training and testing dataser for target domain')
+        self.parser.add_argument('--lab_source_dir', type=str, help='training label for source domain')
+        self.parser.add_argument('--lab_target_dir', type=str, help='training label for target domain')
+        self.parser.add_argument('--dataset_mode', type=str, default='paired', help='chooses how datasets are loaded. [paired| unpaired]')
+        self.parser.add_argument('--num_threads', default=4, type=int, help='# threads for loading data')
+        self.parser.add_argument('--batch_size', type=int, default=1, help='input batch size')
+        self.parser.add_argument('--load_size', nargs='+', type=int, default=[256, 192], help='scale images to this size, [256, 192] or [640, 192]')
+        self.parser.add_argument('--flip', action='store_true', help='if specified, do flip the image for data augmentation')
+        self.parser.add_argument('--rotation', action='store_true', help='if specified, rotate the images for data augmentation')
+        self.parser.add_argument('--crop', action='store_true', help='if specified, crop the images for data augmentation')
+        self.parser.add_argument('--shuffle', action='store_true', help='if true, takes images randomly')
+
+        
         # network structure define
         self.parser.add_argument('--image_nc', type=int, default=3,
                                  help='# of input image channels')
@@ -92,6 +108,12 @@ class BaseOptions():
                                  help='visidom port of the web display')
         self.parser.add_argument('--display_single_pane_ncols', type=int, default=0,
                                  help='if positive, display all images in a single visidom web panel')
+
+        ### others
+        self.parser.add_argument('--pre_trained_enc', type=str, default=None, help='None, B5, B7')
+        self.parser.add_argument('--experiment', action='store_true')
+
+
 
     def parse(self):
         if not self.initialized:

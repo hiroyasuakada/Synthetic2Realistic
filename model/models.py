@@ -1,5 +1,5 @@
 
-def create_model(opt):
+def create_model(opt, labeled_dataset, unlabeled_dataset):
     print(opt.model)
     if opt.model == 'wsupervised':
         from .T2model import T2NetModel
@@ -12,6 +12,6 @@ def create_model(opt):
         model = TestModel()
     else:
         raise ValueError("Model [%s] not recognized." % opt.model)
-    model.initialize(opt)
+    model.initialize(opt, labeled_dataset, unlabeled_dataset)
     print("model [%s] was created." % (model.name()))
     return model

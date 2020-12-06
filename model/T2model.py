@@ -3,6 +3,7 @@ from torch.autograd import Variable
 import itertools
 from util.image_pool import ImagePool
 import util.task as task
+from util.GP import GPStruct
 from .base_model import BaseModel
 from . import network
 
@@ -10,7 +11,7 @@ class T2NetModel(BaseModel):
     def name(self):
         return 'T2Net model'
 
-    def initialize(self, opt):
+    def initialize(self, opt, labeled_dataset=None, unlabeled_dataset=None):
         BaseModel.initialize(self, opt)
 
         self.loss_names = ['img_rec', 'img_G', 'img_D', 'lab_s', 'lab_t', 'f_G', 'f_D', 'lab_smooth']
@@ -59,6 +60,22 @@ class T2NetModel(BaseModel):
 
         if not self.isTrain or opt.continue_train:
             self.load_networks(opt.which_epoch)
+
+
+        # initializing GPstruct
+        if self.isTrain and opt.gp:
+            self.labeled_dataset = labeled_dataset
+            self.unlabeled_dataset = unlabeled_dataset
+            self.gp_struct = GPStruct(
+                num_lbl=len(labeled_dataset), 
+                num_unlbl=len(unlabeled_dataset),
+                train_batch_size=self.opt.batch_size,
+                version=self.opt.version,
+                kernel_type=self.opt.kernel_type,
+                pre_trained_enc = opt.pre_trained_enc,
+                img_size = opt.load_size
+            )
+
 
     def set_input(self, input):
         self.input = input
@@ -232,3 +249,29 @@ class T2NetModel(BaseModel):
             task_loss += task.rec_loss(lab_fake_i, lab_real_i)
 
         self.loss_lab_t = task_loss * self.opt.lambda_rec_lab
+
+    def generate_fmaps_GP(self):
+        self.gp_struct.gen_featmaps(self.labeled_dataset, self.net_img2task, self.device)
+        self.gp_struct.gen_featmaps_unlbl(self.unlabeled_dataset, self.net_img2task, self.device)
+
+    def optimize_parameters_GP(self, iter, data):
+        input_im = data['img_target'].cuda(self.gpu_ids[0])
+        # gt = data['lab_target'].cuda(self.device)
+        imgid = data['img_target_paths']
+
+        self.optimizer_T2Net.zero_grad()
+        network._freeze(self.net_s2t, self.net_img_D, self.net_f_D)
+        network._unfreeze(self.net_img2task)
+        self.net_img2task.train()
+
+        ### center in 
+        # outputs = self.netTask(input_im)
+        # zy_in = outputs[0]
+
+        ### center_out
+        _, zy_in = self.net_img2task(input_im, gp=True)
+
+        loss_gp = self.gp_struct.compute_gploss(zy_in, imgid, iter, 0)
+        self.loss_gp = loss_gp * self.opt.lambda_gp
+        self.loss_gp.backward()
+        self.optimizer_T2Net.step()  

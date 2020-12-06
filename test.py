@@ -1,3 +1,12 @@
+'''
+python test.py \
+    --name t2net_unreal2nyu --model test \
+    --img_source_file ../datasets/nyu_data/test_color \
+    --img_target_file ../datasets/nyu_data/test_color \
+    --gpu_ids 1 --ntest 654 --norm instance
+'''
+
+
 import os
 from options.test_options import TestOptions
 from dataloader.data_loader import dataloader
