@@ -1,6 +1,6 @@
 # nvidia-docker run --rm -it -v /home/ytpc2019b/catkin_ws/src/ros_start/scripts:/home dockerfile:latest /bin/bash
 xhost +local:user
-    NV_GPU='4, 5' nvidia-docker run -it \
+    NV_GPU='4, 5, 6' nvidia-docker run -it \
     --shm-size=128G \
     --env=DISPLAY=$DISPLAY \
     --volume="/tmp/.X11-unix:/tmp/.X11-unix:rw" \

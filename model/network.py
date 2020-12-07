@@ -120,6 +120,8 @@ def define_G(input_nc, output_nc, ngf=64, layers=4, norm='batch', activation='PR
     elif model_type == 'UNet':
         net = _UNetGenerator(input_nc, output_nc, ngf, layers, norm, activation, drop_rate, add_noise, gpu_ids, weight)
         # net = _PreUNet16(input_nc, output_nc, ngf, layers, True, norm, activation, drop_rate, gpu_ids)
+    elif model_type == 'USANet':
+        net = _UNetSAGenerator(input_nc, output_nc, ngf, layers, norm, activation, drop_rate, add_noise, gpu_ids, weight)
     else:
         raise NotImplementedError('model type [%s] is not implemented', model_type)
 
@@ -518,6 +520,155 @@ class _UNetGenerator(nn.Module):
         result = [center_in]
 
         # print(center_in.size())
+
+        for i in range(self.layers-4):
+            model = getattr(self, 'up'+str(i))
+            center_out = model.forward(torch.cat([center_out, middle[self.layers-5-i]], 1))
+
+        deconv4 = self.deconv4.forward(torch.cat([center_out, conv3 * self.weight], 1))
+        output4 = self.output4.forward(torch.cat([center_out, conv3 * self.weight], 1))
+        result.append(output4)
+        deconv3 = self.deconv3.forward(torch.cat([deconv4, conv2 * self.weight * 0.5, self.upsample(output4)], 1))
+        output3 = self.output3.forward(torch.cat([deconv4, conv2 * self.weight * 0.5, self.upsample(output4)], 1))
+        result.append(output3)
+        deconv2 = self.deconv2.forward(torch.cat([deconv3, conv1 * self.weight * 0.1, self.upsample(output3)], 1))
+        output2 = self.output2.forward(torch.cat([deconv3, conv1 * self.weight * 0.1, self.upsample(output3)], 1))
+        result.append(output2)
+        output1 = self.output1.forward(torch.cat([deconv2, self.upsample(output2)], 1))
+        result.append(output1)
+
+        if not gp:
+            return result
+        else:
+            return result, center_out
+
+
+### Scalar Self Attention
+class ScalarSelfAttention(nn.Module):
+    """ Self-Attention Layer"""
+
+    def __init__(self, in_dim):
+        super(ScalarSelfAttention, self).__init__()
+
+        # pointwise convolution
+        self.query_conv = nn.Conv2d(
+            in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
+        self.key_conv = nn.Conv2d(
+            in_channels=in_dim, out_channels=in_dim//8, kernel_size=1)
+        self.value_conv = nn.Conv2d(
+            in_channels=in_dim, out_channels=in_dim, kernel_size=1)
+
+        self.softmax = nn.Softmax(dim=-2)
+
+        # output = x + gamma * o
+        self.gamma = nn.Parameter(torch.zeros(1))
+
+    def forward(self, x):
+        X = x
+
+        # B,C',W,H → B,C',N
+        proj_query = self.query_conv(X).view(X.shape[0], -1, X.shape[2]*X.shape[3])  # B,C',N
+        proj_query = proj_query.permute(0, 2, 1)  
+        proj_key = self.key_conv(X).view(X.shape[0], -1, X.shape[2]*X.shape[3])  # B,C',N
+
+        S = torch.bmm(proj_query, proj_key) 
+
+        attention_map_T = self.softmax(S)  # row-dimentional softmax
+        attention_map = attention_map_T.permute(0, 2, 1)
+
+        proj_value = self.value_conv(X).view(X.shape[0], -1, X.shape[2]*X.shape[3])  # B,C,N
+        o = torch.bmm(proj_value, attention_map.permute(0, 2, 1))
+        
+        o = o.view(X.shape[0], X.shape[1], X.shape[2], X.shape[3])
+        out = x + self.gamma * o
+
+        return out, attention_map
+
+
+class _UNetSAGenerator(nn.Module):
+    def __init__(self, input_nc, output_nc, ngf=64, layers=4, norm='batch', activation='PReLU', drop_rate=0, add_noise=False, gpu_ids=[],
+                 weight=0.1):
+        super(_UNetSAGenerator, self).__init__()
+
+        self.gpu_ids = gpu_ids
+        self.layers = layers
+        self.weight = weight
+        norm_layer = get_norm_layer(norm_type=norm)
+        nonlinearity = get_nonlinearity_layer(activation_type=activation)
+
+        if type(norm_layer) == functools.partial:
+            use_bias = norm_layer.func == nn.InstanceNorm2d
+        else:
+            use_bias = norm_layer == nn.InstanceNorm2d
+
+        # encoder part
+        self.pool = nn.AvgPool2d(kernel_size=2, stride=2)
+        self.conv1 = nn.Sequential(
+            nn.ReflectionPad2d(3),
+            nn.Conv2d(input_nc, ngf, kernel_size=7, padding=0, bias=use_bias),
+            norm_layer(ngf),
+            nonlinearity
+        )
+        self.conv2 = _EncoderBlock(ngf, ngf*2, ngf*2, norm_layer, nonlinearity, use_bias)
+        self.conv3 = _EncoderBlock(ngf*2, ngf*4, ngf*4, norm_layer, nonlinearity, use_bias)
+        self.conv4 = _EncoderBlock(ngf*4, ngf*8, ngf*8, norm_layer, nonlinearity, use_bias)
+
+        for i in range(layers-4):
+            conv = _EncoderBlock(ngf*8, ngf*8, ngf*8, norm_layer, nonlinearity, use_bias)
+            setattr(self, 'down'+str(i), conv.model)
+
+        center=[]
+        for i in range(7-layers):
+            center +=[
+                _InceptionBlock(ngf*8, ngf*8, norm_layer, nonlinearity, 7-layers, drop_rate, use_bias)
+            ]
+
+        center += [
+        _DecoderUpBlock(ngf*8, ngf*8, ngf*4, norm_layer, nonlinearity, use_bias)
+        ]
+
+        if add_noise:
+            center += [GaussianNoiseLayer()]
+        self.center = nn.Sequential(*center)
+
+        # self attention layers
+        self.sa1 = ScalarSelfAttention(ngf*4)
+        self.sa2 = ScalarSelfAttention(ngf*4)
+
+
+        for i in range(layers-4):
+            upconv = _DecoderUpBlock(ngf*(8+4), ngf*8, ngf*4, norm_layer, nonlinearity, use_bias)
+            setattr(self, 'up' + str(i), upconv.model)
+
+        self.deconv4 = _DecoderUpBlock(ngf*(4+4), ngf*8, ngf*2, norm_layer, nonlinearity, use_bias)
+        self.deconv3 = _DecoderUpBlock(ngf*(2+2)+output_nc, ngf*4, ngf, norm_layer, nonlinearity, use_bias)
+        self.deconv2 = _DecoderUpBlock(ngf*(1+1)+output_nc, ngf*2, int(ngf/2), norm_layer, nonlinearity, use_bias)
+
+        self.output4 = _OutputBlock(ngf*(4+4), output_nc, 3, use_bias)
+        self.output3 = _OutputBlock(ngf*(2+2)+output_nc, output_nc, 3, use_bias)
+        self.output2 = _OutputBlock(ngf*(1+1)+output_nc, output_nc, 3, use_bias)
+        self.output1 = _OutputBlock(int(ngf/2)+output_nc, output_nc, 7, use_bias)
+
+        self.upsample = nn.Upsample(scale_factor=2, mode='nearest')
+
+    def forward(self, input, gp=False):
+        conv1 = self.pool(self.conv1(input))
+        conv2 = self.pool(self.conv2.forward(conv1))
+        conv3 = self.pool(self.conv3.forward(conv2))
+        center_in = self.pool(self.conv4.forward(conv3))
+
+        middle = [center_in]
+        for i in range(self.layers-4):
+            model = getattr(self, 'down'+str(i))
+            center_in = self.pool(model.forward(center_in))
+            middle.append(center_in)
+        center_out = self.center.forward(center_in)
+
+        # self attention layers
+        out1, amap1 = self.sa1(center_out)
+        center_out, amap2 = self.sa2(out1)
+
+        result = [center_in]
 
         for i in range(self.layers-4):
             model = getattr(self, 'up'+str(i))
