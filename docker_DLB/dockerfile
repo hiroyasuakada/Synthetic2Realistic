@@ -68,6 +68,9 @@ RUN pip3 install cupy-cuda100
 # RUN pip3 install tensorflow-gpu==1.15.0
 RUN pip3 install torch torchvision
 
+RUN pip3 install natsort
+
+
 ##############################################################################
 ##                            opencv2 error                                 ##
 ##############################################################################
@@ -89,3 +92,13 @@ ENV export CUDA_HOME=/usr/local/cuda-10.0
 ENV export CUDA_HOST_COMPILER=/usr/bin/gcc-7.5
 
 RUN pip3 install adabelief-pytorch==0.1.0
+
+##############################################################################
+##                                OpenEXR                                   ##
+##############################################################################
+
+RUN apt update
+RUN echo y | apt install libopenexr-dev
+RUN echo y | apt install openexr
+RUN echo y | apt install zlib1g-dev
+RUN pip3 install OpenEXR

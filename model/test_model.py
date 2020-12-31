@@ -10,7 +10,7 @@ class TestModel(BaseModel):
     def name(self):
         return 'TestModel'
 
-    def initialize(self, opt):
+    def initialize(self, opt, labeled_dataset=None, unlabeled_dataset=None):
         assert (not opt.isTrain)
         BaseModel.initialize(self, opt)
 

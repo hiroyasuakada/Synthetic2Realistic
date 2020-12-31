@@ -9,7 +9,7 @@ class TNetModel(BaseModel):
     def name(self):
         return 'TNet Model'
 
-    def initialize(self, opt):
+    def initialize(self, opt, labeled_dataset=None, unlabeled_dataset=None):
         BaseModel.initialize(self, opt)
 
         self.loss_names = ['lab_s', 'lab_t', 'lab_smooth']

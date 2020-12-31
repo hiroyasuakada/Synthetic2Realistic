@@ -68,6 +68,9 @@ RUN pip3 install cupy-cuda90
 RUN pip3 install torch==1.1 torchvision==0.3
 RUN pip3 install adabelief-pytorch==0.1.0
 
+RUN pip3 install natsort
+
+
 
 # ##############################################################################
 # ##                            opencv2 error                                 ##
@@ -105,3 +108,15 @@ ENV export CUDA_ROOT=/usr/local/cuda-9.0
 ENV export CUDA_HOME=/usr/local/cuda-9.0
 ENV export CUDA_HOST_COMPILER=/usr/bin/gcc-5.4
 
+##############################################################################
+##                                OpenEXR                                   ##
+##############################################################################
+
+RUN apt update
+RUN echo y | apt install libopenexr-dev
+RUN echo y | apt install openexr
+RUN echo y | apt install zlib1g-dev
+
+RUN apt update
+RUN echo y | apt install python3.7-dev
+RUN pip3 install OpenEXR

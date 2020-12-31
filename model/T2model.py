@@ -6,6 +6,7 @@ import util.task as task
 from util.GP import GPStruct
 from .base_model import BaseModel
 from . import network
+from util.loss import ssim
 
 class T2NetModel(BaseModel):
     def name(self):
@@ -200,6 +201,14 @@ class T2NetModel(BaseModel):
 
         self.loss_lab_s = task_loss * self.opt.lambda_rec_lab
 
+        # # loss ssim
+        # if self.opt.lambda_task_ssim > 0:
+        #     self.loss_ssim_s = torch.clamp((1 - ssim(self.lab_s_g[-1], self.lab_s, val_range = 1.0 )) * 0.5, 0, 1) * self.opt.lambda_task_ssim
+        # else:
+        #     self.loss_ssim_s = 0
+
+
+        # total_loss = self.loss_f_G + self.loss_lab_s
         total_loss = self.loss_f_G + self.loss_lab_s
 
         total_loss.backward()

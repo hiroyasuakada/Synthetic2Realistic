@@ -4,6 +4,17 @@ python test.py \
     --img_source_file ../datasets/nyu_data/test_color \
     --img_target_file ../datasets/nyu_data/test_color \
     --gpu_ids 1 --ntest 654 --norm instance
+
+python test.py \
+    --name t2net_simgan_vkitti2kitti --model test \
+    --img_source_dir ../datasets/vkitti_data/train_color \
+    --img_target_dir ./datasplit/eigen_test_files.txt \
+    --lab_source_dir ../datasets/vkitti_data/train_depth \
+    --lab_target_dir ./datasplit/eigen_test_files.txt \
+    --txt_data_path ../datasets/kitti_data \
+    --load_size 640 192 \
+    --gpu_ids 1 --ntest 697 --norm instance
+
 '''
 
 
@@ -17,7 +28,7 @@ from util import html
 opt = TestOptions().parse()
 
 dataset = dataloader(opt)
-dataset_size = len(dataset) * opt.batchSize
+dataset_size = len(dataset) * opt.batch_size
 print ('testing images = %d ' % dataset_size)
 
 model = create_model(opt)

@@ -34,6 +34,9 @@ class TrainOptions(BaseOptions):
                                  help='weight for task loss')
         self.parser.add_argument('--lambda_smooth', type=float, default=0.01,
                                  help='weight for depth smooth loss')
+        self.parser.add_argument('--lambda_task_ssim', type=float, default=0.0, help='weight for task_ssim loss')  
+
+
         # display the results
         self.parser.add_argument('--display_freq', type=int, default=100,
                                  help='frequency of showing training results on screen')

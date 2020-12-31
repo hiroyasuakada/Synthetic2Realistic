@@ -1,5 +1,5 @@
 
-def create_model(opt, labeled_dataset, unlabeled_dataset):
+def create_model(opt, labeled_dataset=None, unlabeled_dataset=None):
     print(opt.model)
     if opt.model == 'wsupervised':
         from .T2model import T2NetModel

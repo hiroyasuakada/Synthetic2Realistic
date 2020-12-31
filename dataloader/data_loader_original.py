@@ -5,7 +5,6 @@ import torch.utils.data as data
 from .image_folder import make_dataset
 import torchvision.transforms.functional as F
 
-
 class CreateDataset(data.Dataset):
     def initialize(self, opt):
         self.opt = opt

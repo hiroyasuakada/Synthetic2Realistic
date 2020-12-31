@@ -8,5 +8,5 @@ python train.py \
 --lab_target_dir ../datasets/unreal2nyu/trainB_depth \
 --norm instance \
 --batch_size 1 --niter 10 --niter_decay 10 --shuffle --flip --rotation \
---gpu_ids 1 --no_html --display_id -1 \
+--gpu_ids 0 --no_html --display_id -1 \
 --task_model_type USANet \

@@ -5,6 +5,7 @@ from natsort import natsorted
 IMG_EXTENSIONS = [
     '.jpg', '.JPG', '.jpeg', '.JPEG',
     '.png', '.PNG', '.ppm', '.PPM', '.bmp', '.BMP',
+    '.exr'
 ]
 
 
@@ -29,9 +30,10 @@ def make_dataset_txt(opt, path_files):
 
     for path in paths:
         path = path.strip()
-        # path_left = os.path.join(opt.data_path, path[0:66])
-        # print(path_left)
-        image_paths.append(path)
+        path_left = os.path.join(opt.txt_data_path, path[0:66].replace('.jpg', '.png'))
+        path_right = os.path.join(opt.txt_data_path, path[67:].replace('.jpg', '.png'))
+        image_paths.append(path_left)
+        image_paths.append(path_right)
 
     if not opt is None:
         if opt.experiment:

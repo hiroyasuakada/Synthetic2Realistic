@@ -633,8 +633,6 @@ class _UNetSAGenerator(nn.Module):
 
         # self attention layers
         self.sa1 = ScalarSelfAttention(ngf*4)
-        self.sa2 = ScalarSelfAttention(ngf*4)
-
 
         for i in range(layers-4):
             upconv = _DecoderUpBlock(ngf*(8+4), ngf*8, ngf*4, norm_layer, nonlinearity, use_bias)
@@ -665,8 +663,7 @@ class _UNetSAGenerator(nn.Module):
         center_out = self.center.forward(center_in)
 
         # self attention layers
-        out1, amap1 = self.sa1(center_out)
-        center_out, amap2 = self.sa2(out1)
+        center_out, amap1 = self.sa1(center_out)
 
         result = [center_in]
 
@@ -775,8 +772,8 @@ class _FeatureDiscriminator(nn.Module):
             use_bias = norm_layer == nn.InstanceNorm2d
 
         model = [
-            # nn.Linear(input_nc * 40 * 12, input_nc),
-            nn.Linear(input_nc * 16 * 12, input_nc),
+            nn.Linear(input_nc * 40 * 12, input_nc),
+            # nn.Linear(input_nc * 16 * 12, input_nc),
             nonlinearity,
         ]
 
@@ -792,8 +789,8 @@ class _FeatureDiscriminator(nn.Module):
 
     def forward(self, input):
         result = []
-        # input = input.view(-1, 512 * 40 * 12)
-        input = input.view(-1, 512 * 16 * 12)
+        input = input.view(-1, 512 * 40 * 12)
+        # input = input.view(-1, 512 * 16 * 12)
         output = self.model(input)
         result.append(output)
         return result

@@ -15,6 +15,8 @@ class BaseOptions():
                                  help='name of the experiment. It decides where to store samples and models')
         self.parser.add_argument('--checkpoints_dir', type=str, default='./checkpoints',
                                  help='models are save here')
+        self.parser.add_argument('--txt_data_path', type=str, default='kitti_data', 
+                                 help='If use .txt to load images, please indicate path to image dataset')
         self.parser.add_argument('--which_epoch', type=str, default='latest',
                                  help='which epoch to load')
         self.parser.add_argument('--gpu_ids', type=str, default='0',
