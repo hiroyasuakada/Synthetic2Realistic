@@ -1,6 +1,6 @@
 set -ex
 python train.py \
---name t2net_simgan_vkitti2kitti \
+--name t2net_simgan_vkitti2kitti_3 \
 --model wsupervised \
 --img_source_dir ../datasets/vkitti_data/train_color \
 --img_target_dir ./datasplit/eigen_train_files.txt \
