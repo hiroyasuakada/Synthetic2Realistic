@@ -42,3 +42,6 @@ for i,data in enumerate(dataset):
     model.set_input(data)
     model.test()
     model.save_results(visualizer, web_page)
+
+    if i == opt.ntest:
+        break

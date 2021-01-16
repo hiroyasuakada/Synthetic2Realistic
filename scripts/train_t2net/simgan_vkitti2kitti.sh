@@ -13,4 +13,4 @@ python train.py \
 --gpu_ids 0 --no_html --display_id -1 \
 --load_size 640 192 \
 --lambda_rec_img 100 \
---lambda_rec_lab 100
+--lambda_rec_lab 100 \

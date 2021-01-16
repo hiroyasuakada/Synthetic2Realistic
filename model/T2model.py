@@ -201,14 +201,6 @@ class T2NetModel(BaseModel):
 
         self.loss_lab_s = task_loss * self.opt.lambda_rec_lab
 
-        # # loss ssim
-        # if self.opt.lambda_task_ssim > 0:
-        #     self.loss_ssim_s = torch.clamp((1 - ssim(self.lab_s_g[-1], self.lab_s, val_range = 1.0 )) * 0.5, 0, 1) * self.opt.lambda_task_ssim
-        # else:
-        #     self.loss_ssim_s = 0
-
-
-        # total_loss = self.loss_f_G + self.loss_lab_s
         total_loss = self.loss_f_G + self.loss_lab_s
 
         total_loss.backward()
@@ -245,6 +237,11 @@ class T2NetModel(BaseModel):
         self.optimizer_D.zero_grad()
         self.backward_D_feature()
         self.backward_D_image()
+
+        # self.optimizer_D.step()
+        # for p in self.net_f_D.parameters():
+        #     p.data.clamp_(-0.01,0.01)
+
         if epoch_iter % 5 == 0:
             self.optimizer_D.step()
             for p in self.net_f_D.parameters():

@@ -128,6 +128,7 @@ class CreateFullDataset(torch.utils.data.Dataset):
 
     def __len__(self):
         return max(self.img_source_size, self.img_target_size)
+        # return self.img_source_size
 
     def _make_transform(self, opt, augment, depth=False):
         transforms_list = []

@@ -18,6 +18,7 @@ class TrainOptions(BaseOptions):
         self.parser.add_argument('--task_epoch', type=int, default=0,
                                  help='# of epoch for task learning')
         # learning rate and loss weight
+        # learning rate and loss weight
         self.parser.add_argument('--lr_policy', type=str, default='lambda',
                                  help='learning rate policy[lambda|step|plateau]')
         self.parser.add_argument('--lr_task', type=float, default=1e-4,
@@ -32,9 +33,26 @@ class TrainOptions(BaseOptions):
                                  help='weight for feature GAN loss')
         self.parser.add_argument('--lambda_rec_lab', type=float, default=20.0,
                                  help='weight for task loss')
-        self.parser.add_argument('--lambda_smooth', type=float, default=0.01,
+        self.parser.add_argument('--lambda_smooth', type=float, default=0.1,
                                  help='weight for depth smooth loss')
-        self.parser.add_argument('--lambda_task_ssim', type=float, default=0.0, help='weight for task_ssim loss')  
+
+        # self.parser.add_argument('--lr_policy', type=str, default='lambda',
+        #                          help='learning rate policy[lambda|step|plateau]')
+        # self.parser.add_argument('--lr_task', type=float, default=1e-4,
+        #                          help='initial learning rate for adam')
+        # self.parser.add_argument('--lr_trans', type=float, default=2e-5,
+        #                          help='initial learning rate for discriminator')
+        # self.parser.add_argument('--lambda_rec_img', type=float, default=40.0,
+        #                          help='weight for image reconstruction loss')
+        # self.parser.add_argument('--lambda_gan_img', type=float, default=1.0,
+        #                          help='weight for image GAN loss')
+        # self.parser.add_argument('--lambda_gan_feature', type=float, default=0.1,
+        #                          help='weight for feature GAN loss')
+        # self.parser.add_argument('--lambda_rec_lab', type=float, default=20.0,
+        #                          help='weight for task loss')
+        # self.parser.add_argument('--lambda_smooth', type=float, default=0.01,
+        #                          help='weight for depth smooth loss')
+        # self.parser.add_argument('--lambda_task_ssim', type=float, default=0.0, help='weight for task_ssim loss')  
 
 
         # display the results

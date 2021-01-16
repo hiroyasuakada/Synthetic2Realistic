@@ -12,8 +12,8 @@ class TNetModel(BaseModel):
     def initialize(self, opt, labeled_dataset=None, unlabeled_dataset=None):
         BaseModel.initialize(self, opt)
 
-        self.loss_names = ['lab_s', 'lab_t', 'lab_smooth']
-        self.visual_names = ['img_s', 'lab_s', 'lab_s_g', 'img_t', 'lab_t', 'lab_t_g']
+        self.loss_names = ['lab_s', 'lab_smooth']
+        self.visual_names = ['img_s', 'lab_s', 'lab_s_g']
         self.model_names = ['img2task']
 
         # define the task network
@@ -26,7 +26,7 @@ class TNetModel(BaseModel):
             self.l1loss = torch.nn.L1Loss()
             self.l2loss = torch.nn.MSELoss()
 
-            self.optimizer_img2task = torch.optim.Adam(self.net_img2task.parameters(), lr=opt.lr_task, betas=(0.9, 0.999))
+            self.optimizer_img2task = torch.optim.Adam(self.net_img2task.parameters(), lr=opt.lr_task, betas=(0.95, 0.999))
 
             self.optimizers = []
             self.schedulers = []
@@ -40,18 +40,26 @@ class TNetModel(BaseModel):
 
     def set_input(self, input):
         self.input = input
-        self.img_source = input['img_source']
-        self.img_target = input['img_target']
+        self.img_source = input['img_source'].cuda(self.gpu_ids[0])
+        self.img_target = input['img_target'].cuda(self.gpu_ids[0])
         if self.isTrain:
-            self.lab_source = input['lab_source']
-            self.lab_target = input['lab_target']
+            self.lab_source = input['lab_source'].cuda(self.gpu_ids[0])
+            self.lab_target = input['lab_target'].cuda(self.gpu_ids[0])
 
-        if len(self.gpu_ids) > 0:
-            self.img_source = self.img_source.cuda(self.gpu_ids[0], async=True)
-            self.img_target = self.img_target.cuda(self.gpu_ids[0], async=True)
-            if self.isTrain:
-                self.lab_source = self.lab_source.cuda(self.gpu_ids[0], async=True)
-                self.lab_target = self.lab_target.cuda(self.gpu_ids[0], async=True)
+
+        # self.input = input
+        # self.img_source = input['img_source']
+        # self.img_target = input['img_target']
+        # if self.isTrain:
+        #     self.lab_source = input['lab_source']
+        #     self.lab_target = input['lab_target']
+
+        # if len(self.gpu_ids) > 0:
+        #     self.img_source = self.img_source.cuda(self.gpu_ids[0], async=True)
+        #     self.img_target = self.img_target.cuda(self.gpu_ids[0], async=True)
+        #     if self.isTrain:
+        #         self.lab_source = self.lab_source.cuda(self.gpu_ids[0], async=True)
+        #         self.lab_target = self.lab_target.cuda(self.gpu_ids[0], async=True)
 
     def forward(self):
         self.img_s = Variable(self.img_source)
@@ -81,8 +89,13 @@ class TNetModel(BaseModel):
 
     def backward_task(self):
 
-        self.lab_s_g, self.lab_t_g, self.lab_f_s, self.lab_f_t, size = \
-            self.foreward_G_basic(self.net_img2task, self.img_s, self.img_t)
+        # self.lab_s_g, self.lab_t_g, self.lab_f_s, self.lab_f_t, size = \
+        #     self.foreward_G_basic(self.net_img2task, self.img_s, self.img_t)
+
+        self.output_s_g = self.net_img2task(self.img_s)
+
+        size = len(self.output_s_g)
+        self.lab_s_g = self.output_s_g[1:] 
 
         lab_real = task.scale_pyramid(self.lab_s, size-1)
         task_loss = 0
@@ -91,8 +104,8 @@ class TNetModel(BaseModel):
 
         self.loss_lab_s = task_loss * self.opt.lambda_rec_lab
 
-        img_real = task.scale_pyramid(self.img_t, size - 1)
-        self.loss_lab_smooth = task.get_smooth_weight(self.lab_t_g, img_real, size - 1) * self.opt.lambda_smooth
+        img_real = task.scale_pyramid(self.img_s, size - 1)
+        self.loss_lab_smooth = task.get_smooth_weight(self.lab_s_g, img_real, size - 1) * self.opt.lambda_smooth
 
         total_loss = self.loss_lab_s + self.loss_lab_smooth
 
@@ -107,10 +120,10 @@ class TNetModel(BaseModel):
         self.optimizer_img2task.step()
 
     def validation_target(self):
+        pass
+        # lab_real = task.scale_pyramid(self.lab_t, len(self.lab_t_g))
+        # task_loss = 0
+        # for (lab_fake_i, lab_real_i) in zip(self.lab_t_g, lab_real):
+        #     task_loss += self.l1loss(lab_fake_i, lab_real_i)
 
-        lab_real = task.scale_pyramid(self.lab_t, len(self.lab_t_g))
-        task_loss = 0
-        for (lab_fake_i, lab_real_i) in zip(self.lab_t_g, lab_real):
-            task_loss += self.l1loss(lab_fake_i, lab_real_i)
-
-        self.loss_lab_t = task_loss * self.opt.lambda_rec_lab
+        # self.loss_lab_t = task_loss * self.opt.lambda_rec_lab
