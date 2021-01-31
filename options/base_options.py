@@ -56,7 +56,7 @@ class BaseOptions():
         self.parser.add_argument('--img_target_dir', type=str, help='training and testing dataser for target domain')
         self.parser.add_argument('--lab_source_dir', type=str, help='training label for source domain')
         self.parser.add_argument('--lab_target_dir', type=str, help='training label for target domain')
-        self.parser.add_argument('--dataset_mode', type=str, default='paired', help='chooses how datasets are loaded. [paired| unpaired]')
+        self.parser.add_argument('--dataset_mode', type=str, default='unpaired', help='chooses how datasets are loaded. [paired| unpaired]')
         self.parser.add_argument('--num_threads', default=4, type=int, help='# threads for loading data')
         self.parser.add_argument('--batch_size', type=int, default=1, help='input batch size')
         self.parser.add_argument('--load_size', nargs='+', type=int, default=[256, 192], help='scale images to this size, [256, 192] or [640, 192]')
@@ -64,7 +64,8 @@ class BaseOptions():
         self.parser.add_argument('--rotation', action='store_true', help='if specified, rotate the images for data augmentation')
         self.parser.add_argument('--crop', action='store_true', help='if specified, crop the images for data augmentation')
         self.parser.add_argument('--shuffle', action='store_true', help='if true, takes images randomly')
-
+        self.parser.add_argument('--mixed', action='store_true', help='whether uses mixed datasets')
+        self.parser.add_argument('--taskmodel', action='store_true', help='whether uses mixed datasets')
         
         # network structure define
         self.parser.add_argument('--image_nc', type=int, default=3,

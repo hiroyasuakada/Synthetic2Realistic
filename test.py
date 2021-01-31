@@ -26,6 +26,7 @@ from util.visualizer import Visualizer
 from util import html
 
 opt = TestOptions().parse()
+opt.dataset_mode = 'paired'
 
 dataset = dataloader(opt)
 dataset_size = len(dataset) * opt.batch_size

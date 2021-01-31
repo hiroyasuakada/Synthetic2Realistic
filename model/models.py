@@ -7,6 +7,12 @@ def create_model(opt, labeled_dataset=None, unlabeled_dataset=None):
     elif opt.model == 'supervised':
         from .TaskModel import TNetModel
         model = TNetModel()
+    elif opt.model == 'supervised_real':
+        from .TaskRealModel import TNetRealModel
+        model = TNetRealModel()
+    elif opt.model == 'supervised_full':
+        from .TaskFullModel import TNetFullModel
+        model = TNetFullModel()
     elif opt.model == 'test':
         from .test_model import TestModel
         model = TestModel()

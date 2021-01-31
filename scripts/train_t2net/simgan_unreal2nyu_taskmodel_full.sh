@@ -1,7 +1,7 @@
 set -ex
 python train.py \
---name t2net_simgan_unreal2nyu_taskmodel \
---model supervised \
+--name t2net_simgan_unreal2nyu_taskmodel_full \
+--model supervised_full \
 --img_source_dir ../datasets/unreal2nyu/trainA \
 --img_target_dir ../datasets/unreal2nyu/trainB \
 --lab_source_dir ../datasets/unreal2nyu/trainA_depth \
@@ -15,4 +15,4 @@ python train.py \
 --lambda_rec_lab 20 \
 --lr_task 0.0001 \
 --lr_trans 0.00005 \
---taskmodel
+--mixed
